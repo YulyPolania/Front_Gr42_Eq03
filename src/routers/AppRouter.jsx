@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { PrivateRoute } from "./PrivateRoute";
 import { PublicRoute } from "./PublicRoute";
 
-import { Login } from "../components/pages/Login.jsx";
+import { Login } from "../components/ui/Login.jsx";
 import { DashboardRoutes } from "./DashboardRoutes";
 
 export const AppRouter = () => {

@@ -1,13 +1,11 @@
 import { Routes, Route } from "react-router-dom";
-// import Sidebar from "../components/uiComponents/Sidebar";
-import Dashboard from "../components/uiComponents/Dashboard";
-import {DataTable} from "../components/uiComponents/DataTable"
+import Dashboard from "../components/ui/Dashboard";
 import UsersForm from "../components/pages/user/UsersForm"
 import UsersTable from "../components/pages/user/UsersTable"
 
 export const DashboardRoutes = () => {
   const pages = [
-    { path: "usuarios", element: <DataTable/> },
+    { path: "usuarios", element: <UsersTable/> },
     { path: "clientes", element: <UsersForm/> },
     { path: "proveedores", element: <UsersTable/> },
     { path: "productos", element: <h1>Componente productos</h1> },

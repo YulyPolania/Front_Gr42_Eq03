@@ -1,12 +1,11 @@
 import * as React from 'react';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import CssBaseline from '@mui/material/CssBaseline';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Link from '@mui/material/Link';
-import Sidebar from '../uiComponents/Sidebar';
-import Header from '../uiComponents/Header';
+import Sidebar from '../ui/Sidebar';
+import Navbar from './Navbar';
 import { Outlet, /*NavLink*/ } from "react-router-dom";
 
 function Copyright() {
@@ -21,20 +20,18 @@ function Copyright() {
   );
 }
 
-let theme = createTheme();
 
 const drawerWidth = 256;
 
 export default function Dashboard(props) {
   const [mobileOpen, setMobileOpen] = React.useState(false);
-  const mediaQuery = useMediaQuery(theme.breakpoints.up('lg'));
+  const mediaQuery = useMediaQuery((theme)=>theme.breakpoints.up('lg'));
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
 
   return (
-    <ThemeProvider theme={theme}>
       <Box sx={{ display: 'flex', minHeight: '100vh' }}>
         <CssBaseline />
         <Box
@@ -56,7 +53,7 @@ export default function Dashboard(props) {
           />
         </Box>
         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-          <Header onDrawerToggle={handleDrawerToggle} />
+          <Navbar onDrawerToggle={handleDrawerToggle} />
           <Box component="main" sx={{ flex: 1, py: 6, px: 4, bgcolor: '#eaeff1' }}>
             <Outlet />
             {props.children}
@@ -66,6 +63,5 @@ export default function Dashboard(props) {
           </Box>
         </Box>
       </Box>
-    </ThemeProvider>
   );
 }

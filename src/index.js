@@ -4,19 +4,8 @@ import './index.css';
 import {TiendaGApp} from './TiendaGApp';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import reportWebVitals from './reportWebVitals';
-import { green, purple } from '@mui/material/colors';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: purple[500],
-    },
-    secondary: {
-      main: green[500],
-    },
-  },
-})
+import {ThemeProvider } from '@mui/material/styles';
+import { theme } from "./assets/Theme";
 
 ReactDOM.render(
   <ThemeProvider theme={theme}>

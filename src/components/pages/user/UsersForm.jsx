@@ -68,7 +68,7 @@ export const UsersForm = (props) => {
   const {
     variant = "add",
     rowData = null,
-    setRowData = null,
+    setDataForm = null,
     data = {},
     handleOpen,
   } = props;
@@ -87,33 +87,25 @@ export const UsersForm = (props) => {
   };
 
   const handleSent = () => {
-    variant === "add" ? handleSubmit() : console.log("noAdd");
+    variant === "add" && handleSubmit()
   };
 
   const getDataRow = () => {
     if (rowData) {
       for (let element in rowData) {
-        if (element !== "tableData") {
-          setFields((prevState) => ({
-            ...prevState,
-            [element]: { ...prevState[element], value: rowData[element] },
-          }));
-        }
+        setFields((prevState) => ({
+          ...prevState,
+          [element]: { ...prevState[element], value: rowData[element] },
+        }));
       }
     }
   };
 
   const setDataRow = (e) => {
-    if (setRowData) {
-      for (let element in fields) {
-        setRowData((prevState) => ({
-          ...prevState,
-          data: { ...prevState.data, [element]: fields[element].value },
-        }));
-      }
-      setRowData((prevState) => ({
+    if (setDataForm) {
+      setDataForm((prevState) => ({
         ...prevState,
-        data: { ...prevState.data, [e.target.name]: e.target.value },
+        dataForm: { ...prevState.dataForm, [e.target.name]: e.target.value },
       }));
     }
   };
@@ -127,7 +119,6 @@ export const UsersForm = (props) => {
             ({ [element]: a }) => String(a) === String(rowData[element])
           )
         ) {
-          console.log(fields[element].id);
           setFields((prevState) => ({
             ...prevState,
             [element]: {
@@ -139,6 +130,7 @@ export const UsersForm = (props) => {
         }
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

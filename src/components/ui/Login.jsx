@@ -1,116 +1,108 @@
-import React, { useContext, useState } from "react";
+import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Avatar from "@mui/material/Avatar";
-import Button from "@mui/material/Button";
-import CssBaseline from "@mui/material/CssBaseline";
-import TextField from "@mui/material/TextField";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import Checkbox from "@mui/material/Checkbox";
-import Link from "@mui/material/Link";
-import Paper from "@mui/material/Paper";
-import Box from "@mui/material/Box";
-import Grid from "@mui/material/Grid";
+import {
+  Avatar,
+  Button,
+  CssBaseline,
+  TextField,
+  FormControlLabel,
+  Checkbox,
+  Paper,
+  Box,
+  Grid,
+  Typography,
+} from "@mui/material";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import Typography from "@mui/material/Typography";
-import bg from "../../assets/img/bgLogin.jpg";
-import { ThemeProvider } from "@mui/material/styles";
 
+import bg from "../../assets/img/bgLogin.jpg";
 import { AuthContext } from "../../auth/AuthContext";
 import { types } from "../../types/types";
-
-import { theme } from "../../assets/Theme";
 
 export const Login = () => {
   const { dispatch } = useContext(AuthContext);
   const navigate = useNavigate();
+  const [login, setLogin] = useState({
+    username: {
+      name: "username",
+      value: "",
+      label: "Usuario",
+      error: false,
+      regularExpression: /^[a-zA-Z0-9_-]{4,20}$/,
+      message: "",
+      errorMessage: "Entre 4 y 20 caracteres sin espacios.",
+    },
+    password: {
+      name: "password",
+      value: "",
+      label: "Contraseña",
+      regularExpression: /^[a-zA-Z0-9!@#$%^&.*]{8,100}$/,
+      message: "",
+      errorMessage:
+        "Entre 8 y 100 caracteres sin espacios o caracteres especiales",
+      error: false,
+    },
+  });
+  const [submitBtn, setSubmitBtn] = useState(true);
 
-  const handleLogin = () => {
+  const handleLogin = (e) => {
+    e.preventDefault();
     const lastPath = localStorage.getItem("lastPath") || "/";
-
     dispatch({
       type: types.login,
       payload: {
         name: "Equipo3",
       },
     });
-
     navigate(lastPath);
   };
-  const [data, setData] = React.useState({
-    username: "",
-    password: "",
-  });
-  const [leyendaUsername, setleyendaUsername] = React.useState("");
-  const [leyendaPassword, setLeyendaPassword] = React.useState("");
-  const [errorPassword, seterrorPassword] = React.useState(false);
-  const [errorUsername, seterrorUsername] = React.useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setData({
-      ...data,
-      [name]: value,
-    });
+    setLogin((prevState) => ({
+      ...prevState,
+      [name]: { ...prevState[name], value: value },
+    }));
   };
-  const handleUsername = () => {
-    if (data.username.length === "") {
-      seterrorUsername(true);
-      setleyendaUsername("El usuario es obligatorio");
-      return false;
-    } else {
-      const max = 15;
-      if (data.username.length >= max) {
-        seterrorUsername(true);
-        setleyendaUsername(
-          `El usuario no puede tener mas de ${max} caracteres`
-        );
-        return false;
-      } else {
-        seterrorUsername(false);
-        setleyendaUsername("");
-        return true;
-      }
+  
+  const handleSubmit = () => {
+    let p = [];
+    for (let element in login) {
+      const { error, value } = login[element];
+      p.push(value !== "" && !error);
     }
+    setSubmitBtn(!p.reduce((a, b) => a && b));
   };
 
-  const handlePassword = () => {
-    if (data.password === "") {
-      seterrorPassword(true);
-      setLeyendaPassword(`La contraseña es obligatoria`);
-      return false;
+  const validate = (e) => {
+    const { name, value } = e.target;
+    let re = login[name].regularExpression;
+    let em = login[name].errorMessage;
+    if (!re.test(String(value))) {
+      setLogin((prevState) => ({
+        ...prevState,
+        [name]: { ...prevState[name], error: true, message: em },
+      }));
+      setSubmitBtn(true);
     } else {
-      seterrorPassword(false);
-      setLeyendaPassword("");
-      return true;
-    }
-  };
-
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    if (handleUsername() & handlePassword()) {
-      const { username, password } = data;
-      console.log({
-        username: username,
-        password: password,
-      });
+      setLogin((prevState) => ({
+        ...prevState,
+        [name]: { ...prevState[name], error: false, message: "" },
+      }));
+      setSubmitBtn(false);
+      handleSubmit();
     }
   };
 
   return (
-    <ThemeProvider theme={theme}>
       <Grid
         container
         spacing={0}
         direction="column"
         alignItems="center"
         justifyContent="center"
-        style={{ minHeight: "100vh", }}
+        style={{ minHeight: "100vh" }}
       >
-        <Grid
-          container
-          component="main"
-          sx={{ height: "95%", width:"90%" }}
-        >
+        <Grid container component="main" sx={{ height: "95%", width: "90%" }}>
           <CssBaseline />
           <Grid
             item
@@ -129,7 +121,7 @@ export const Login = () => {
               backgroundSize: "cover",
               backgroundPosition: "center",
               borderTopLeftRadius: 16,
-              borderBottomLeftRadius: 16
+              borderBottomLeftRadius: 16,
             }}
           />
           <Grid
@@ -142,7 +134,7 @@ export const Login = () => {
             square
             sx={{
               borderTopRightRadius: 16,
-              borderBottomRightRadius: 16
+              borderBottomRightRadius: 16,
             }}
           >
             <Box
@@ -181,33 +173,39 @@ export const Login = () => {
               <Box
                 component="form"
                 noValidate
-                onSubmit={handleSubmit}
+                onSubmit={handleLogin}
                 sx={{ my: "1%" }}
               >
                 <TextField
                   onChange={handleChange}
-                  error={errorUsername}
-                  helperText={leyendaUsername}
+                  onKeyUp={validate}
+                  onBlur={validate}
+                  error={login.username.error}
+                  helperText={login.username.message}
+                  name={login.username.name}
+                  label={login.username.label}
+                  value={login.username.value}
+                  id={login.username.name}
                   margin="normal"
                   required
                   fullWidth
-                  id="username"
-                  label="Usuario"
-                  name="username"
-                  autoComplete="username"
-                  autoFocus
+                  type="username"
+                  autoComplete="current-username"
                 />
                 <TextField
                   onChange={handleChange}
-                  error={errorPassword}
-                  helperText={leyendaPassword}
+                  onKeyUp={validate}
+                  onBlur={validate}
+                  error={login.password.error}
+                  helperText={login.password.message}
+                  name={login.password.name}
+                  label={login.password.label}
+                  value={login.password.value}
+                  id={login.password.name}
                   margin="normal"
                   required
                   fullWidth
-                  name="password"
-                  label="Contraseña"
                   type="password"
-                  id="password"
                   autoComplete="current-password"
                 />
                 <FormControlLabel
@@ -216,10 +214,11 @@ export const Login = () => {
                 />
                 <Button
                   type="submit"
+                  disabled={submitBtn}
                   fullWidth
                   variant="contained"
                   sx={{ my: "3%" }}
-                  onClick={handleLogin}
+                  onClick={handleSubmit}
                 >
                   Ingresar al sistema
                 </Button>
@@ -228,15 +227,5 @@ export const Login = () => {
           </Grid>
         </Grid>
       </Grid>
-    </ThemeProvider>
   );
 };
-
-// <div className="container mt-5">
-//   <h1>Login</h1>
-//   <hr />
-
-//   <button className="btn btn-primary" onClick={handleLogin}>
-//     Login
-//   </button>
-// </div>
