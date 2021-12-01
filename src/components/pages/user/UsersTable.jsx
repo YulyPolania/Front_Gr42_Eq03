@@ -1,9 +1,10 @@
 import MaterialTable from "@material-table/core";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { Modal, Box, Stack, Alert as MuiAlert, Snackbar } from "@mui/material";
-import UsersService from "../../../services/UsersService";
+import userService from "../../../services/userService";
 import UsersForm from "./UsersForm";
 import Localization from "../../generic/Localization";
+import { AuthContext } from "../../../auth/AuthContext";
 
 const style = {
   position: "absolute",
@@ -67,10 +68,11 @@ const columns = [
 
 const UsersTable = (props) => {
   const [data, setData] = useState([]);
+  const { logout } = useContext(AuthContext);
   const [form, setForm] = useState({
     openForm: false,
-    typeForm: "a",
-    dataForm: {},
+    typeForm: "add",
+    dataForm: { cedulaUsuario: "" },
   });
   const [alert, setAlert] = useState({
     openAlert: false,
@@ -78,55 +80,125 @@ const UsersTable = (props) => {
     message: "",
   });
 
-  const getData = async () => {
-    await UsersService.getUsers().then((res) => {
-      setData(res.data);
-    });
+  const handleError = (err) => {
+    switch (err.response?.status) {
+      case 401:
+        logout();
+        break;
+      case 403:
+        setAlert((prevState) => ({
+          ...prevState,
+          openAlert: true,
+          severity: "warning",
+          message:
+            "Acceso denegado, no tiene permisos para realizar esta acción!",
+        }));
+        break;
+      case 400 || 404:
+        setAlert((prevState) => ({
+          ...prevState,
+          openAlert: true,
+          severity: "error",
+          message: err.response.data.mensaje,
+        }));
+        break;
+      default:
+        console.log(err);
+        break;
+    }
   };
 
-  const postData = async () => {
-    await UsersService.saveUser(form.dataForm)
+  const handleSuccess = (res) => {
+    setAlert((prevState) => ({
+      ...prevState,
+      openAlert: true,
+      severity: "success",
+      message: res.data.mensaje,
+    }));
+  };
+
+  const getData = async () => {
+    await userService
+      .getUsers()
       .then((res) => {
-        getData();
-        handleOpen();
-        setAlert((prevState) => ({
-          ...prevState,
-          open: true,
-        }));
+        setData(res.data);
       })
-      .catch((res) => {
-        setAlert((prevState) => ({
-          ...prevState,
-          open: true,
-        }));
+      .catch((err) => {
+        handleError(err);
       });
   };
 
-  // const deleteData = async () => {
-  //   // await UsersService.saveUser(form.dataForm.cedulaUsuario).then((res) => {
-  //   //   setData(data.concat(res.data));
-  //   //   handleOpen();
-  //   // });
-  // };
+  const postData = async () => {
+    await userService
+      .saveUser(form.dataForm)
+      .then((res) => {
+        getData();
+        handleOpen();
+        handleSuccess(res);
+      })
+      .catch((err) => {
+        handleError(err);
+      });
+    getData();
+  };
+
+  const deleteData = async () => {
+    await userService
+      .deleteUser(form.dataForm.cedulaUsuario)
+      .then((res) => {
+        setData(data.concat(res.data));
+        handleOpen();
+        handleSuccess(res);
+      })
+      .catch((err) => {
+        handleError(err);
+      });
+    getData();
+  };
+
+  const putData = async () => {
+    await userService
+      .updateUser(form.dataForm.cedulaUsuario, form.dataForm)
+      .then((res) => {
+        getData();
+        handleOpen();
+        handleSuccess(res);
+      })
+      .catch((err) => {
+        handleError(err);
+      });
+    getData();
+  };
 
   useEffect(() => {
     getData();
   }, []);
 
   const handleOpen = (key, rowData) => {
-    setForm((prevState) => ({ ...prevState, typeForm: key }));
-    if (rowData) {
-      const { tableData, ...newRowData } = rowData;
-      setForm((prevState) => ({ ...prevState, dataForm: { ...newRowData } }));
+    if (key !== "alert") {
+      setForm((prevState) => ({ ...prevState, typeForm: key }));
+      if (rowData) {
+        const { tableData, ...newRowData } = rowData;
+        setForm((prevState) => ({ ...prevState, dataForm: { ...newRowData } }));
+      }
+      setForm((prevState) => ({ ...prevState, openForm: !form.openForm }));
+    } else {
+      setAlert((prevState) => ({
+        ...prevState,
+        openAlert: !alert.openAlert,
+      }));
     }
-    setForm((prevState) => ({ ...prevState, openForm: !form.openForm }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (form.typeForm === "add" || form.typeForm === "edit") {
+    handleOpen();
+    if (form.typeForm === "add") {
       postData();
     } else if (form.typeForm === "del") {
+      deleteData();
+    } else if (form.typeForm === "edit") {
+      putData();
     }
   };
 
@@ -177,12 +249,12 @@ const UsersTable = (props) => {
         <Snackbar
           open={alert.openAlert}
           autoHideDuration={6000}
-          onClose={handleOpen}
+          onClose={() => handleOpen("alert", null)}
         >
           <MuiAlert
             elevation={6}
             variant="filled"
-            onClose={handleOpen}
+            onClose={() => handleOpen("alert", null)}
             severity={alert.severity}
             sx={{ width: "100%" }}
           >

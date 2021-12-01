@@ -20,6 +20,7 @@ const initialValues = {
     message: "",
     unique: true,
     id: true,
+    type:"number",
   },
   nombreUsuario: {
     name: "nombreUsuario",
@@ -30,6 +31,7 @@ const initialValues = {
     error: false,
     message: "",
     unique: false,
+    type:"text",
   },
   emailUsuario: {
     name: "emailUsuario",
@@ -40,6 +42,7 @@ const initialValues = {
     error: false,
     message: "",
     unique: false,
+    type:"email",
   },
   password: {
     name: "password",
@@ -51,6 +54,7 @@ const initialValues = {
     error: false,
     message: "",
     unique: false,
+    type:"password",
   },
   username: {
     name: "username",
@@ -61,6 +65,7 @@ const initialValues = {
     error: false,
     message: "",
     unique: true,
+    type:"username"
   },
 };
 
@@ -72,8 +77,14 @@ export const UsersForm = (props) => {
     data = {},
     handleOpen,
   } = props;
-  const { fields, setFields, handleChange, submitBtn, handleSubmit, validate } =
-    useForm(initialValues, data, variant);
+
+  const {
+    fields,
+    setFields,
+    handleChange,
+    submitBtn,
+    handleSubmit, validate,
+  } = useForm(initialValues, data, variant);
 
   const [swicth, setSwitch] = useState(true);
 
@@ -87,7 +98,7 @@ export const UsersForm = (props) => {
   };
 
   const handleSent = () => {
-    variant === "add" && handleSubmit()
+    handleSubmit()
   };
 
   const getDataRow = () => {
@@ -130,7 +141,7 @@ export const UsersForm = (props) => {
         }
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -158,6 +169,8 @@ export const UsersForm = (props) => {
             onKeyUp={validate}
             onBlur={validate}
             key={fields.cedulaUsuario.name}
+            required
+            type={fields.cedulaUsuario.type}
           />
           <Controls.Input
             disabled={variant === "del" ? true : false}
@@ -172,6 +185,8 @@ export const UsersForm = (props) => {
             onKeyUp={validate}
             onBlur={validate}
             key={fields.nombreUsuario.name}
+            required
+            type={fields.nombreUsuario.type}
           />
           <Controls.Input
             disabled={variant === "del" ? true : false}
@@ -186,6 +201,8 @@ export const UsersForm = (props) => {
             onKeyUp={validate}
             onBlur={validate}
             key={fields.emailUsuario.name}
+            required
+            type={fields.emailUsuario.type}
           />
         </Grid>
         <Grid item md={6} xs={12} align="center">
@@ -202,6 +219,8 @@ export const UsersForm = (props) => {
             onKeyUp={validate}
             onBlur={validate}
             key={fields.username.name}
+            required
+            type={fields.username.type}
           />
           <FormControlLabel
             style={{ display: variant === "edit" ? "block" : "none" }}
@@ -223,6 +242,8 @@ export const UsersForm = (props) => {
             onKeyUp={validate}
             onBlur={validate}
             key={fields.password.name}
+            required
+            type={fields.password.type}
           />
         </Grid>
       </Grid>

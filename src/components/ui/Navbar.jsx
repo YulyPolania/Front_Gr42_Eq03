@@ -1,7 +1,4 @@
-import React, { useContext } from "react";
-import { useNavigate } from "react-router-dom";
-import { AuthContext } from "../../auth/AuthContext";
-import { types } from "../../types/types";
+import { useState, useContext } from "react";
 import PropTypes from "prop-types";
 import {
   AppBar,
@@ -14,24 +11,11 @@ import {
   Toolbar,
 } from "@mui/material";
 import { Menu as MenuIcon, AccountCircle } from "@mui/icons-material";
+import { AuthContext } from "../../auth/AuthContext";
 
-function Navbar({ onDrawerToggle }) {
-  const {
-    user: { name },
-    dispatch,
-  } = useContext(AuthContext);
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    setAnchorEl(null);
-    navigate("/login");
-    dispatch({
-      type: types.logout,
-    });
-  };
-
-  const [auth /*setAuth*/] = React.useState(true);
-  const [anchorEl, setAnchorEl] = React.useState(null);
+function Navbar({ onDrawerToggle, handleLogout }) {
+  const [anchorEl, setAnchorEl] = useState(null);
+  const { user: { name }, title} = useContext(AuthContext);
 
   const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
@@ -58,43 +42,41 @@ function Navbar({ onDrawerToggle }) {
             </Grid>
             <Grid item>
               <Tabs value={0} textColor="inherit">
-                <Tab label="Users" />
+                <Tab label={title} />
               </Tabs>
             </Grid>
             <Grid item xs />
             <Grid item></Grid>
-            {auth && (
-              <div>
-                <IconButton
-                  size="large"
-                  aria-label="account of current user"
-                  aria-controls="menu-appbar"
-                  aria-haspopup="true"
-                  onClick={handleMenu}
-                  color="inherit"
-                >
-                  <AccountCircle />
-                </IconButton>
-                <Menu
-                  id="menu-appbar"
-                  anchorEl={anchorEl}
-                  anchorOrigin={{
-                    vertical: "top",
-                    horizontal: "right",
-                  }}
-                  keepMounted
-                  transformOrigin={{
-                    vertical: "top",
-                    horizontal: "right",
-                  }}
-                  open={Boolean(anchorEl)}
-                  onClose={handleClose}
-                >
-                  <MenuItem onClick={handleClose}>{name}</MenuItem>
-                  <MenuItem onClick={handleLogout}>Logout</MenuItem>
-                </Menu>
-              </div>
-            )}
+            <div>
+              <IconButton
+                size="large"
+                aria-label="Usuario actual"
+                aria-controls="menu-appbar"
+                aria-haspopup="true"
+                onClick={handleMenu}
+                color="inherit"
+              >
+                <AccountCircle />
+              </IconButton>
+              <Menu
+                id="menu-appbar"
+                anchorEl={anchorEl}
+                anchorOrigin={{
+                  vertical: "top",
+                  horizontal: "right",
+                }}
+                keepMounted
+                transformOrigin={{
+                  vertical: "top",
+                  horizontal: "right",
+                }}
+                open={Boolean(anchorEl)}
+                onClose={handleClose}
+              >
+                <MenuItem onClick={handleClose}>{name}</MenuItem>
+                <MenuItem onClick={handleLogout}>Logout</MenuItem>
+              </Menu>
+            </div>
           </Grid>
         </Toolbar>
       </AppBar>

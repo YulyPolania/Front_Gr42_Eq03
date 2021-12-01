@@ -1,7 +1,7 @@
 import { TextField } from "@mui/material";
 
 const Input = (props) => {
-  const { name, label, value, onChange, onKeyUp, ...other } = props;
+  const { name, label, value, onChange, onKeyUp, autoComplete="of", ...other } = props;
 
   return (
     <TextField
@@ -11,6 +11,7 @@ const Input = (props) => {
       value={value}
       onChange={onChange}
       onKeyUp={onKeyUp}
+      autoComplete={autoComplete}
     />
   );
 };

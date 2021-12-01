@@ -1,19 +1,16 @@
-import * as React from "react";
-
-import { /*Outlet, NavLink,*/ useNavigate } from "react-router-dom";
-
-import Divider from "@mui/material/Divider";
-import Drawer from "@mui/material/Drawer";
-import List from "@mui/material/List";
-import Box from "@mui/material/Box";
-import ListItem from "@mui/material/ListItem";
-import ListItemButton from "@mui/material/ListItemButton";
-import ListItemIcon from "@mui/material/ListItemIcon";
-import ListItemText from "@mui/material/ListItemText";
-// import HomeIcon from "@mui/icons-material/Home";
-
-import {TiendaGIcon as TGIcon} from "../../assets/img/TiendaGIcon"
-
+import { useState, useContext} from "react";
+import { useNavigate } from "react-router-dom";
+import { TiendaGIcon as TGIcon } from "../../assets/img/TiendaGIcon";
+import {
+  Divider,
+  Drawer,
+  List,
+  Box,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+} from "@mui/material";
 import {
   PeopleAltRounded as UsersIcon,
   PersonRounded as CostumerIcon,
@@ -23,101 +20,94 @@ import {
   TimelineRounded as ConsolidatedIcon,
   LogoutRounded as LogoutIcon,
 } from "@mui/icons-material";
+import { AuthContext } from "../../auth/AuthContext";
 
 const categories = [
   {
-    id: "Pages",
+    name: "Pages",
     children: [
-      { id: "Usuarios", icon: <UsersIcon /> },
-      { id: "Clientes", icon: <CostumerIcon /> },
-      { id: "Productos", icon: <ProductsIcon /> },
-      { id: "Proveedores", icon: <SuppliersIcon /> },
-      { id: "Ventas", icon: <SalesIcon /> },
+      { path: "/Usuarios", name: "Usuarios", icon: <UsersIcon /> },
+      { path: "/Clientes", name: "Clientes", icon: <CostumerIcon /> },
+      { path: "/Productos", name: "Productos", icon: <ProductsIcon /> },
+      { path: "/Proveedores", name: "Proveedores", icon: <SuppliersIcon /> },
+      { path: "/Ventas", name: "Ventas", icon: <SalesIcon /> },
     ],
   },
   {
-    id: "Consolidado Ventas",
+    name: "Consolidado Ventas",
     children: [
-      { id: "Por cliente", icon: <ConsolidatedIcon /> },
-      { id: "Por sucursal", icon: <ConsolidatedIcon /> },
+      { path: "/Ventas/Cliente", name: "Por cliente", icon: <ConsolidatedIcon /> },
+      { path: "/Ventas/Sucursal", name: "Por sucursal", icon: <ConsolidatedIcon /> },
     ],
   },
 ];
 
-export default function Sidebar(props) {
-  const { ...other } = props;
+export default function Sidebar({handleLogout,...other}) {
   const navigate = useNavigate();
+  const [selectedIndex, setSelectedIndex] = useState("/");
+  const { setTitle} = useContext(AuthContext);
 
-  const [selectedIndex, setSelectedIndex] = React.useState(1);
-
-  const handleListItemClick = (event, index) => {
-    setSelectedIndex(index);
-    navigate(index);
+  const handleListItemClick = (path, name) => {
+    setSelectedIndex(name);
+    setTitle(name)
+    navigate(path);
   };
 
   return (
-    <>
-      <Drawer variant="permanent" {...other}>
-        <List disablePadding>
-          <ListItemButton >
-            <ListItemIcon >
-              <TGIcon width={60} height={60} />
-              <ListItemText 
-              sx={{mt:2.5}}
+    <Drawer variant="permanent" {...other}>
+      <List disablePadding>
+        <ListItemButton>
+          <ListItemIcon>
+            <TGIcon width={60} height={60} />
+            <ListItemText
+              sx={{ mt: 2.5 }}
               primaryTypographyProps={{
                 fontSize: 20,
-                fontWeight: 'medium',
+                fontWeight: "medium",
                 letterSpacing: 0,
               }}
-              >TiendaG 2.0</ListItemText>
-            </ListItemIcon>
-          </ListItemButton>
-          <Divider />
-          {categories.map(({ id, children }) => (
-            <Box key={id}>
-              <ListItem>
-                <ListItemText>{id}</ListItemText>
-              </ListItem>
-              {children.map(({ id: childId, icon }) => (
-                // <NavLink
-                //   to={"/" + childId}
-                //   key={childId}
-                //   style={{ textDecoration: "none" }}
-                // >
-                  <ListItem disablePadding key={childId}>
-                    <ListItemButton
-                      selected={selectedIndex === childId}
-                      onClick={(event) => handleListItemClick(event, "/" + childId)}
-                    >
-                      <ListItemIcon>{icon}</ListItemIcon>
-                      <ListItemText>{childId}</ListItemText>
-                    </ListItemButton>
-                  </ListItem>
-                // </NavLink>
-              ))}
-              <Divider />
-            </Box>
-          ))}
-          <Box
-            sx={{
-              // position: "fixed",
-              bottom: 0,
-              paddingBottom: 0,
-            }}
-          >
-            <ListItem disablePadding>
-              <ListItemButton onClick={(event) => handleListItemClick(event, "/login")}>
-                <ListItemIcon>
-                  <LogoutIcon />
-                </ListItemIcon>
-                <ListItemText>Others</ListItemText>
-              </ListItemButton>
+            >
+              TiendaG 2.0
+            </ListItemText>
+          </ListItemIcon>
+        </ListItemButton>
+        <Divider />
+        {categories.map(({ name, children }) => (
+          <Box key={name}>
+            <ListItem>
+              <ListItemText>{name}</ListItemText>
             </ListItem>
+            {children.map(({ path, name, icon }) => (
+              <ListItem disablePadding key={name}>
+                <ListItemButton
+                  selected={selectedIndex === name}
+                  onClick={() => handleListItemClick(path, name)}
+                >
+                  <ListItemIcon>{icon}</ListItemIcon>
+                  <ListItemText>{name}</ListItemText>
+                </ListItemButton>
+              </ListItem>
+            ))}
             <Divider />
           </Box>
-        </List>
-      </Drawer>
-      {/* <Outlet /> */}
-    </>
+        ))}
+        <Box
+          sx={{
+            bottom: 0,
+            paddingBottom: 0,
+          }}
+        >
+          <ListItem disablePadding>
+            <ListItemButton onClick={handleLogout}>
+              <ListItemIcon>
+                <LogoutIcon />
+              </ListItemIcon>
+              <ListItemText>Logout</ListItemText>
+            </ListItemButton>
+          </ListItem>
+          <Divider />
+        </Box>
+      </List>
+    </Drawer>
   );
 }
