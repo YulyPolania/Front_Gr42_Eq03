@@ -1,10 +1,8 @@
 import MaterialTable from "@material-table/core";
 import { useEffect, useState, useContext } from "react";
-import { useNavigate } from "react-router-dom";
 import { Modal, Box } from "@mui/material";
-import userService from "../../../services/userService";
-import permisoService from "../../../services/permisoService";
-import UsersForm from "./UsersForm";
+import customerService from "../../../services/customerService";
+import CustomersForm from "./CustomersForm";
 import Localization from "../../generic/Localization";
 import { AuthContext } from "../../../auth/AuthContext";
 
@@ -23,7 +21,7 @@ const style = {
 const columns = [
   {
     title: "Cédula",
-    field: "cedulaUsuario",
+    field: "cedulaCliente",
     type: "numeric",
     width: "auto",
     draggable: false,
@@ -31,64 +29,53 @@ const columns = [
   },
   {
     title: "Nombre",
-    field: "nombreUsuario",
-    width: "auto",
-    draggable: false,
-    cellStyle: { borderRight: "1px solid #e5e5e5" },
-  },
-  {
-    title: "Usuario",
-    field: "username",
+    field: "nombreCliente",
+    type: "string",
     width: "auto",
     draggable: false,
     cellStyle: { borderRight: "1px solid #e5e5e5" },
   },
   {
     title: "Corréo",
-    field: "emailUsuario",
+    field: "emailCliente",
     type: "numeric",
     width: "auto",
     draggable: false,
     cellStyle: { borderRight: "1px solid #e5e5e5" },
   },
   {
-    title: "Contraseña",
-    field: "password",
+    title: "Teléfono",
+    field: "telefonoCliente",
     width: "auto",
-    hidden: true,
     draggable: false,
     cellStyle: { borderRight: "1px solid #e5e5e5" },
   },
   {
-    title: "Usuario",
-    field: "username",
+    title: "Dirección",
+    field: "direccionCliente",
+    type: "string",
     width: "auto",
     draggable: false,
     cellStyle: { borderRight: "1px solid #e5e5e5" },
   },
 ];
 
-const UsersTable = (props) => {
-  const navigate = useNavigate();
+const CustomersTable = (props) => {
   const [data, setData] = useState([]);
-  const [permisos, setPermisos] = useState([]);
-  const { setAlert, logout } = useContext(AuthContext);
+  const {
+    sede: { baseURL },
+    setAlert,
+    logout,
+  } = useContext(AuthContext);
   const [form, setForm] = useState({
     openForm: false,
     typeForm: "add",
-    dataForm: { cedulaUsuario: "" },
-    dataAllow: [],
+    dataForm: { cedulaCliente: "" },
   });
-  const baseURL = "http://localhost:3001/";
 
   const handleError = (err) => {
     switch (err.response?.status) {
       case 401:
-        setAlert({
-          openAlert: true,
-          severity: "warning",
-          message: "La sesión ha expirado, por favor inicie sesión nuevamente!",
-        });
         logout();
         break;
       case 403:
@@ -98,7 +85,6 @@ const UsersTable = (props) => {
           message:
             "Acceso denegado, no tiene permisos para realizar esta acción!",
         });
-        navigate("/");
         break;
       case 400 || 404:
         setAlert({
@@ -114,28 +100,19 @@ const UsersTable = (props) => {
   };
 
   const handleSuccess = (res) => {
-    handleOpen();
-    getData();
-    setAlert({
+    setAlert((prevState) => ({
+      ...prevState,
       openAlert: true,
       severity: "success",
       message: res.data.mensaje,
-    });
+    }));
   };
 
   const getData = async () => {
-    await userService
-      .getUsers(baseURL)
+    await customerService
+      .getCustomers(baseURL)
       .then((res) => {
         setData(res.data);
-      })
-      .catch((err) => {
-        handleError(err);
-      });
-    await permisoService
-      .getPermisos(baseURL)
-      .then((res) => {
-        setPermisos(res.data);
       })
       .catch((err) => {
         handleError(err);
@@ -143,17 +120,12 @@ const UsersTable = (props) => {
   };
 
   const postData = async () => {
-    await userService
-      .saveUser(baseURL, form.dataForm)
-      .then((res1) => {
-        permisoService
-          .savePermisosList(baseURL, form.dataAllow)
-          .then((res) => {
-            handleSuccess(res1);
-          })
-          .catch((err) => {
-            handleError(err);
-          });
+    await customerService
+      .saveCustomer(baseURL, form.dataForm)
+      .then((res) => {
+        getData();
+        handleOpen();
+        handleSuccess(res);
       })
       .catch((err) => {
         handleError(err);
@@ -162,17 +134,12 @@ const UsersTable = (props) => {
   };
 
   const deleteData = async () => {
-    await userService
-      .deleteUser(baseURL, form.dataForm.cedulaUsuario)
-      .then((res1) => {
-        permisoService
-          .deletePermisosByCedulaUsuario(baseURL, form.dataForm.cedulaUsuario)
-          .then((res) => {
-            handleSuccess(res1);
-          })
-          .catch((err) => {
-            handleError(err);
-          });
+    await customerService
+      .deleteCustomer(baseURL, form.dataForm.cedulaCliente)
+      .then((res) => {
+        setData(data.concat(res.data));
+        handleOpen();
+        handleSuccess(res);
       })
       .catch((err) => {
         handleError(err);
@@ -181,24 +148,12 @@ const UsersTable = (props) => {
   };
 
   const putData = async () => {
-    await userService
-      .updateUser(baseURL, form.dataForm.cedulaUsuario, form.dataForm)
-      .then((res1) => {
-        permisoService
-          .deletePermisosByCedulaUsuario(baseURL, form.dataForm.cedulaUsuario)
-          .then((res) => {
-            permisoService
-              .savePermisosList(baseURL,form.dataAllow)
-              .then((res) => {
-                handleSuccess(res1);
-              })
-              .catch((err) => {
-                handleError(err);
-              });
-          })
-          .catch((err) => {
-            handleError(err);
-          });
+    await customerService
+      .updateCustomer(baseURL, form.dataForm.cedulaCliente, form.dataForm)
+      .then((res) => {
+        getData();
+        handleOpen();
+        handleSuccess(res);
       })
       .catch((err) => {
         handleError(err);
@@ -209,21 +164,22 @@ const UsersTable = (props) => {
   useEffect(() => {
     getData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [baseURL]);
 
   const handleOpen = (key, rowData) => {
-    setForm((prevState) => ({ ...prevState, typeForm: key }));
-    if (rowData) {
-      const { tableData, ...newRowData } = rowData;
-      setForm((prevState) => ({ ...prevState, dataForm: { ...newRowData } }));
-      setForm((prevState) => ({
+    if (key !== "alert") {
+      setForm((prevState) => ({ ...prevState, typeForm: key }));
+      if (rowData) {
+        const { tableData, ...newRowData } = rowData;
+        setForm((prevState) => ({ ...prevState, dataForm: { ...newRowData } }));
+      }
+      setForm((prevState) => ({ ...prevState, openForm: !form.openForm }));
+    } else {
+      setAlert((prevState) => ({
         ...prevState,
-        dataAllow: permisos.filter(
-          (i) => i.cedulaUsuario === rowData.cedulaUsuario
-        ),
+        openAlert: !alert.openAlert,
       }));
     }
-    setForm((prevState) => ({ ...prevState, openForm: !form.openForm }));
   };
 
   const handleSubmit = (e) => {
@@ -241,7 +197,7 @@ const UsersTable = (props) => {
   return (
     <>
       <MaterialTable
-        title="Usuarios"
+        title="Clientes"
         columns={columns}
         data={data}
         localization={Localization}
@@ -272,13 +228,12 @@ const UsersTable = (props) => {
       />
       <Modal open={form.openForm} onClose={() => handleOpen()}>
         <Box sx={style} onSubmit={handleSubmit}>
-          <UsersForm
+          <CustomersForm
             rowData={form.dataForm}
             variant={form.typeForm}
             data={data}
             setDataForm={setForm}
             handleOpen={handleOpen}
-            permisos={form.dataAllow}
           />
         </Box>
       </Modal>
@@ -286,4 +241,4 @@ const UsersTable = (props) => {
   );
 };
 
-export default UsersTable;
+export default CustomersTable;

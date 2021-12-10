@@ -1,6 +1,5 @@
-import { useState, useContext} from "react";
+import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { TiendaGIcon as TGIcon } from "../../assets/img/TiendaGIcon";
 import {
   Divider,
   Drawer,
@@ -20,6 +19,7 @@ import {
   TimelineRounded as ConsolidatedIcon,
   LogoutRounded as LogoutIcon,
 } from "@mui/icons-material";
+import { TiendaGIcon as TGIcon } from "../../assets/img/TiendaGIcon";
 import { AuthContext } from "../../auth/AuthContext";
 
 const categories = [
@@ -36,27 +36,35 @@ const categories = [
   {
     name: "Consolidado Ventas",
     children: [
-      { path: "/Ventas/Cliente", name: "Por cliente", icon: <ConsolidatedIcon /> },
-      { path: "/Ventas/Sucursal", name: "Por sucursal", icon: <ConsolidatedIcon /> },
+      {
+        path: "/Ventas/Cliente",
+        name: "Por cliente",
+        icon: <ConsolidatedIcon />,
+      },
+      {
+        path: "/Ventas/Sucursal",
+        name: "Por sucursal",
+        icon: <ConsolidatedIcon />,
+      },
     ],
   },
 ];
 
-export default function Sidebar({handleLogout,...other}) {
+export default function Sidebar(props) {
   const navigate = useNavigate();
   const [selectedIndex, setSelectedIndex] = useState("/");
-  const { setTitle} = useContext(AuthContext);
+  const { logout, user, setTitle } = useContext(AuthContext);
 
   const handleListItemClick = (path, name) => {
     setSelectedIndex(name);
-    setTitle(name)
+    setTitle(name);
     navigate(path);
   };
 
   return (
-    <Drawer variant="permanent" {...other}>
+    <Drawer variant="permanent" {...props}>
       <List disablePadding>
-        <ListItemButton>
+        <ListItemButton onClick={()=> navigate("/")}>
           <ListItemIcon>
             <TGIcon width={60} height={60} />
             <ListItemText
@@ -77,17 +85,36 @@ export default function Sidebar({handleLogout,...other}) {
             <ListItem>
               <ListItemText>{name}</ListItemText>
             </ListItem>
-            {children.map(({ path, name, icon }) => (
-              <ListItem disablePadding key={name}>
-                <ListItemButton
-                  selected={selectedIndex === name}
-                  onClick={() => handleListItemClick(path, name)}
-                >
-                  <ListItemIcon>{icon}</ListItemIcon>
-                  <ListItemText>{name}</ListItemText>
-                </ListItemButton>
-              </ListItem>
-            ))}
+            {children.map(({ path, name, icon }) =>
+              user.authorities?.some(
+                (x) =>
+                  x === "ROLE_MANAGER" ||
+                  x === "ROLE_ADMIN" ||
+                  x === "ROLE_SUPERADMIN"
+              ) ? (
+                <ListItem disablePadding key={name}>
+                  <ListItemButton
+                    selected={selectedIndex === name}
+                    onClick={() => handleListItemClick(path, name)}
+                  >
+                    <ListItemIcon>{icon}</ListItemIcon>
+                    <ListItemText>{name}</ListItemText>
+                  </ListItemButton>
+                </ListItem>
+              ) : (
+                name !== "Usuarios" && (
+                  <ListItem disablePadding key={name}>
+                    <ListItemButton
+                      selected={selectedIndex === name}
+                      onClick={() => handleListItemClick(path, name)}
+                    >
+                      <ListItemIcon>{icon}</ListItemIcon>
+                      <ListItemText>{name}</ListItemText>
+                    </ListItemButton>
+                  </ListItem>
+                )
+              )
+            )}
             <Divider />
           </Box>
         ))}
@@ -98,7 +125,7 @@ export default function Sidebar({handleLogout,...other}) {
           }}
         >
           <ListItem disablePadding>
-            <ListItemButton onClick={handleLogout}>
+            <ListItemButton onClick={() => logout()}>
               <ListItemIcon>
                 <LogoutIcon />
               </ListItemIcon>

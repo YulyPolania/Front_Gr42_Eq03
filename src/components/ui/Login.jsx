@@ -1,5 +1,6 @@
 import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import jwt_decode from "jwt-decode";
 import {
   Avatar,
   Button,
@@ -11,6 +12,9 @@ import {
   Box,
   Grid,
   Typography,
+  Alert,
+  Stack,
+  Snackbar,
 } from "@mui/material";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 
@@ -43,9 +47,11 @@ const initialLogin = {
 };
 
 export const Login = () => {
-  const { dispatch } = useContext(AuthContext);
+  const {alert, setAlert, dispatch } =
+    useContext(AuthContext);
   const navigate = useNavigate();
   const [login, setLogin] = useState(initialLogin);
+  const [exist, setExist] = useState(false);
   const [submitBtn, setSubmitBtn] = useState(true);
 
   const handleLogin = async (e) => {
@@ -55,26 +61,44 @@ export const Login = () => {
       .then((res) => {
         let accesToken = res.data.access_token;
         let refreshToken = res.data.refresh_token;
-        let { nombreCompleto, sedes, permisos, authorities, exp } = JSON.parse(
-          atob(res.data.access_token.split(".")[1])
-        );
+        let { nombreCompleto, sedes, permisos, authorities, exp, idUsuario } =
+          jwt_decode(res.data.access_token);
         dispatch({
           type: types.login,
           payload: {
             name: nombreCompleto,
-            permisos: permisos,
-            sedes: sedes,
+            permisos: permisos || [],
+            sedes: sedes || [],
             accessToken: accesToken,
             refreshToken: refreshToken,
-            authorities: authorities,
+            authorities: authorities || [],
             exp: exp,
+            idUsuario: idUsuario,
           },
         });
         navigate(lastPath);
+        setAlert({
+          openAlert: true,
+          severity: "success",
+          message: `Bienvenid@ ${nombreCompleto}`,
+        });
       })
       .catch((err) => {
-        alert("Usuario no existe");
-        console.log(JSON.stringify(err.response.status));
+        if (err.response?.status === 400) {
+          setExist(true);
+          setLogin((prevState) => ({
+            ...prevState,
+            username: { ...prevState.username, error: true, message: "" },
+            password: { ...prevState.password, error: true, message: "" },
+          }));
+          setAlert({
+            openAlert: true,
+            severity: "warning",
+            message: "Usuario y/o contraseña incorrectos",
+          });
+        } else {
+          console.log(err.response);
+        }
       });
   };
 
@@ -227,6 +251,11 @@ export const Login = () => {
                 type="password"
                 autoComplete="current-password"
               />
+              {exist && (
+                <Alert severity="warning">
+                  Usuario y/o contraseña incorrectos
+                </Alert>
+              )}
               <FormControlLabel
                 control={<Checkbox value="remember" color="success" />}
                 label="Recordarme"
@@ -245,6 +274,33 @@ export const Login = () => {
           </Box>
         </Grid>
       </Grid>
+      <Stack spacing={2} sx={{ width: "100%" }}>
+        <Snackbar
+          open={alert.openAlert}
+          autoHideDuration={6000}
+          onClose={() =>
+            setAlert((prevState) => ({
+              ...prevState,
+              openAlert: false,
+            }))
+          }
+        >
+          <Alert
+            elevation={6}
+            variant="filled"
+            onClose={() =>
+              setAlert((prevState) => ({
+                ...prevState,
+                openAlert: false,
+              }))
+            }
+            severity={alert.severity}
+            sx={{ width: "100%" }}
+          >
+            {alert.message}
+          </Alert>
+        </Snackbar>
+      </Stack>
     </Grid>
   );
 };

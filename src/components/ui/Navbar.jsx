@@ -9,20 +9,37 @@ import {
   Menu,
   MenuItem,
   Toolbar,
+  Button,
 } from "@mui/material";
 import { Menu as MenuIcon, AccountCircle } from "@mui/icons-material";
 import { AuthContext } from "../../auth/AuthContext";
 
-function Navbar({ onDrawerToggle, handleLogout }) {
-  const [anchorEl, setAnchorEl] = useState(null);
-  const { user: { name }, title} = useContext(AuthContext);
+function Navbar({ onDrawerToggle }) {
+  const [anchorEl, setAnchorEl] = useState({
+    anchorUser: null,
+    anchorSedes: null,
+  });
+  const {
+    logout,
+    user: { name },
+    title,
+    setSede,
+    listSedes,
+    sede,
+  } = useContext(AuthContext);
 
-  const handleMenu = (event) => {
-    setAnchorEl(event.currentTarget);
+  const handleMenu = (event, key) => {
+    setAnchorEl((prevState) => ({
+      ...prevState,
+      [key]: event.currentTarget,
+    }));
   };
 
-  const handleClose = () => {
-    setAnchorEl(null);
+  const handleClose = (key) => {
+    setAnchorEl((prevState) => ({
+      ...prevState,
+      [key]: null,
+    }));
   };
 
   return (
@@ -46,35 +63,65 @@ function Navbar({ onDrawerToggle, handleLogout }) {
               </Tabs>
             </Grid>
             <Grid item xs />
-            <Grid item></Grid>
+            <Grid item>
+              <Button
+                id="basic-button"
+                variant="contained"
+                disableElevation
+                aria-controls="basic-menu"
+                aria-haspopup="true"
+                aria-expanded={
+                  Boolean(anchorEl.anchorSedes) ? "true" : undefined
+                }
+                onClick={(e) => handleMenu(e, "anchorSedes")}
+              >
+                {sede?.label}
+              </Button>
+              <Menu
+                id="basic-menu"
+                anchorEl={anchorEl.anchorSedes}
+                open={Boolean(anchorEl.anchorSedes)}
+                onClose={() => handleClose("anchorSedes")}
+                MenuListProps={{
+                  "aria-labelledby": "basic-button",
+                }}
+              >
+                {listSedes.map((i) => (
+                  <MenuItem
+                  key={i.name}
+                    onClick={() => {
+                      handleClose("anchorSedes");
+                      setSede(i);
+                    }}
+                  >
+                    {i.label}
+                  </MenuItem>
+                ))}
+              </Menu>
+            </Grid>
+            <Grid item xs />
+            <Grid item>{name}</Grid>
             <div>
               <IconButton
                 size="large"
                 aria-label="Usuario actual"
                 aria-controls="menu-appbar"
                 aria-haspopup="true"
-                onClick={handleMenu}
+                onClick={(e) => handleMenu(e, "anchorUser")}
                 color="inherit"
               >
                 <AccountCircle />
               </IconButton>
               <Menu
-                id="menu-appbar"
-                anchorEl={anchorEl}
-                anchorOrigin={{
-                  vertical: "top",
-                  horizontal: "right",
+                id="user"
+                anchorEl={anchorEl.anchorUser}
+                open={Boolean(anchorEl.anchorUser)}
+                onClose={() => handleClose("anchorUser")}
+                MenuListProps={{
+                  "aria-labelledby": "basic-button",
                 }}
-                keepMounted
-                transformOrigin={{
-                  vertical: "top",
-                  horizontal: "right",
-                }}
-                open={Boolean(anchorEl)}
-                onClose={handleClose}
               >
-                <MenuItem onClick={handleClose}>{name}</MenuItem>
-                <MenuItem onClick={handleLogout}>Logout</MenuItem>
+                <MenuItem onClick={() => logout()}>Logout</MenuItem>
               </Menu>
             </div>
           </Grid>

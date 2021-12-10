@@ -2,9 +2,7 @@ import axios from "axios";
 import jwt_decode from "jwt-decode";
 import dayjs from "dayjs";
 
-const baseURL = "http://localhost:8081";
-
-const genericService = () => {
+const genericService = (baseURL) => {
   let user = localStorage.getItem("user")
     ? JSON.parse(localStorage.getItem("user"))
     : null;
@@ -17,14 +15,19 @@ const genericService = () => {
     },
   });
   axiosInstance.interceptors.request.use(async (req) => {
-    const info = jwt_decode(user?.accessToken);
+    const info = jwt_decode(
+      JSON.parse(localStorage.getItem("user")).accessToken
+    );
     const isExpired = dayjs.unix(info?.exp).diff(dayjs()) < 1;
 
     if (!isExpired) return req;
 
     const params = new URLSearchParams();
     params.set("grant_type", "refresh_token");
-    params.set("refresh_token", user?.refreshToken);
+    params.set(
+      "refresh_token",
+      JSON.parse(localStorage.getItem("user")).refreshToken
+    );
     const config = {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -32,7 +35,7 @@ const genericService = () => {
       },
     };
 
-    const response = await axios.post(`${baseURL}/oauth/token`, params, config);
+    const response = await axios.post(`${"http://localhost:3001"}/oauth/token`, params, config);
 
     user.accessToken = response.data.access_token;
     user.refreshToken = response.data.refresh_token;

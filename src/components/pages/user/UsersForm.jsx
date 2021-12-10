@@ -5,8 +5,12 @@ import {
   FormControlLabel,
   Switch,
   Typography,
+  TextField,
+  Checkbox,
+  Autocomplete,
 } from "@mui/material";
-import Controls from "../../controls/Controls";
+import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
+import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import useForm from "../../generic/useForm";
 
 const initialValues = {
@@ -14,24 +18,24 @@ const initialValues = {
     name: "cedulaUsuario",
     value: "",
     label: "Cédula",
-    regularExpression: /^\d{1,20}$/,
+    regularExpression: /^(?=.*[1-9])\d{1,20}$/,
     errorMessage: "Solo números, máximo 20 caracteres sin espacios",
     error: false,
     message: "",
     unique: true,
     id: true,
-    type:"number",
+    type: "number",
   },
   nombreUsuario: {
     name: "nombreUsuario",
     value: "",
     label: "Nombre Completo",
-    regularExpression: /^[a-zA-ZÀ-ÿ\s]{8,40}$/,
-    errorMessage: "Entre 8 y 40 caracteres",
+    regularExpression: /^[a-zA-ZÀ-ÿ\s]{3,40}$/,
+    errorMessage: "Entre 3 y 40 caracteres",
     error: false,
     message: "",
     unique: false,
-    type:"text",
+    type: "text",
   },
   emailUsuario: {
     name: "emailUsuario",
@@ -42,19 +46,7 @@ const initialValues = {
     error: false,
     message: "",
     unique: false,
-    type:"email",
-  },
-  password: {
-    name: "password",
-    value: "",
-    label: "Contraseña",
-    regularExpression: /^[a-zA-Z0-9!@#$%^&.*]{8,100}$/,
-    errorMessage:
-      "Entre 8 y 100 caracteres sin espacios o caracteres especiales",
-    error: false,
-    message: "",
-    unique: false,
-    type:"password",
+    type: "email",
   },
   username: {
     name: "username",
@@ -65,8 +57,34 @@ const initialValues = {
     error: false,
     message: "",
     unique: true,
-    type:"username"
+    type: "username",
   },
+  password: {
+    name: "password",
+    value: "",
+    label: "Contraseña",
+    regularExpression: /^[a-zA-Z0-9!@#$%^&.*]{4,100}$/,
+    errorMessage:
+      "Entre 8 y 100 caracteres sin espacios o caracteres especiales",
+    error: false,
+    message: "",
+    unique: false,
+    type: "password",
+  },
+};
+
+const auth = {
+  Roles: [
+    { name: "superadmin", value: 1, label: "Super Admin", selected: true },
+    { name: "admin", value: 2, label: "Admin", selected: false },
+    { name: "manager", value: 3, label: "Manager", selected: false },
+    { name: "user", value: 4, label: "Usuario", selected: false },
+  ],
+  Sedes: [
+    { name: "bogota", value: 1, label: "Bogotá", selected: true },
+    { name: "medellin", value: 2, label: "Medellín", selected: false },
+    { name: "cali", value: 3, label: "Cali", selected: false },
+  ],
 };
 
 export const UsersForm = (props) => {
@@ -76,6 +94,7 @@ export const UsersForm = (props) => {
     setDataForm = null,
     data = {},
     handleOpen,
+    permisos = [],
   } = props;
 
   const {
@@ -83,10 +102,18 @@ export const UsersForm = (props) => {
     setFields,
     handleChange,
     submitBtn,
-    handleSubmit, validate,
+    setSubmitBtn,
+    handleSubmit,
+    validate,
   } = useForm(initialValues, data, variant);
 
   const [swicth, setSwitch] = useState(true);
+  const [checkAuth] = useState(auth);
+  const [authData, setAuthData] = useState({
+    Sedes: [],
+    Roles: [],
+    validate: { error: false, message: "" },
+  });
 
   const getValue = (e) => {
     setSwitch(!swicth);
@@ -98,7 +125,41 @@ export const UsersForm = (props) => {
   };
 
   const handleSent = () => {
-    handleSubmit()
+    setPermisos();
+    handleSubmit();
+    handleValidate();
+  };
+
+  const handleClean = () => {
+    setFields(initialValues);
+    setAuthData({
+      Sedes: [],
+      Roles: [],
+      validate: { error: false, message: "" },
+    });
+  };
+
+  const handleSelected = (value, key) => {
+    setAuthData((prevState) => ({
+      ...prevState,
+      [key]: value,
+    }));
+  };
+
+  const handleValidate = () => {
+    if (authData.Roles.length === 0 || authData.Sedes.length === 0) {
+      setAuthData((prevState) => ({
+        ...prevState,
+        validate: { error: true, message: "Debe seleccionar al menos uno" },
+      }));
+      setSubmitBtn(true);
+    } else {
+      setAuthData((prevState) => ({
+        ...prevState,
+        validate: { error: false, message: "" },
+      }));
+      setSubmitBtn(false);
+    }
   };
 
   const getDataRow = () => {
@@ -118,11 +179,120 @@ export const UsersForm = (props) => {
         ...prevState,
         dataForm: { ...prevState.dataForm, [e.target.name]: e.target.value },
       }));
+      setPermisos();
     }
   };
 
+  const setPermisos = ()=>{
+    if (setDataForm) {
+      let rolesXsedes = [];
+      authData.Roles.forEach((i) => {
+        authData.Sedes.forEach((j) => {
+          const valor = {
+            idRol: i.value,
+            idSede: j.value,
+            cedulaUsuario: fields.cedulaUsuario.value,
+          };
+          rolesXsedes.push(valor);
+        });
+      });
+      setDataForm((prevState) => ({
+        ...prevState,
+        dataAllow: rolesXsedes,
+      }));
+  }
+}
+
+  const getPermios = (e) => {
+    if (permisos.length > 0) {
+      const newArrayRoles = auth.Roles.filter(
+        (i) => i.value === permisos.find((q) => q.idRol === i.value)?.idRol
+      );
+      const newArraySedes = auth.Sedes.filter(
+        (i) => i.value === permisos.find((q) => q.idSede === i.value)?.idSede
+      );
+      setAuthData((prevState) => ({
+        ...prevState,
+        Roles: newArrayRoles,
+        Sedes: newArraySedes,
+      }));
+    }
+  };
+
+  const generic = [];
+  const authFields = [];
+  for (const i in fields) {
+    if (i !== "cedulaUsuario" && i !== "password") {
+      const { error, message, label, name, value, type } = fields[i];
+      generic.push(
+        <Grid item md={6} xs={12} align="center" key={i}>
+          <TextField
+            disabled={variant === "del" ? true : false}
+            error={error}
+            helperText={message}
+            sx={{ m: 1, width: "90%" }}
+            variant="outlined"
+            label={label}
+            name={name}
+            value={value}
+            onChange={handleDataChange}
+            onKeyUp={validate}
+            onBlur={validate}
+            required
+            type={type}
+          />
+        </Grid>
+      );
+    }
+  }
+
+  for (const i in auth) {
+    authFields.push(
+      <Grid item md={6} xs={12} align="center" key={i}>
+        <Autocomplete
+          onChange={(event, value) => handleSelected(value, i)}
+          value={authData[i]}
+          onClick={handleValidate}
+          onBlur={handleValidate}
+          onInputChange={handleValidate}
+          sx={{ m: 1, width: "90%" }}
+          disabled={
+            variant === "del" ? true : variant === "add" ? false : swicth
+          }
+          multiple
+          id={i}
+          options={checkAuth[i]}
+          disableCloseOnSelect
+          getOptionLabel={(option) => option.label}
+          renderOption={(props, option, { selected }) => (
+            <li {...props}>
+              <Checkbox
+                icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
+                checkedIcon={<CheckBoxIcon fontSize="small" />}
+                style={{ marginRight: 8 }}
+                checked={selected}
+              />
+              {option.label}
+            </li>
+          )}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              error={authData.validate.error}
+              helperText={authData.validate.message}
+              label={i}
+              placeholder="Seleccione una o varias opcionnes"
+              onClick={handleValidate}
+            />
+          )}
+        />
+      </Grid>
+    );
+  }
+
   useEffect(() => {
     getDataRow();
+    getPermios();
     for (let element in fields) {
       if (fields[element].unique && variant === "add" && rowData) {
         if (
@@ -156,7 +326,7 @@ export const UsersForm = (props) => {
       </Typography>
       <Grid container>
         <Grid item md={6} xs={12} align="center">
-          <Controls.Input
+          <TextField
             disabled={variant === "add" ? false : true}
             error={fields.cedulaUsuario.error}
             helperText={fields.cedulaUsuario.message}
@@ -172,62 +342,19 @@ export const UsersForm = (props) => {
             required
             type={fields.cedulaUsuario.type}
           />
-          <Controls.Input
-            disabled={variant === "del" ? true : false}
-            error={fields.nombreUsuario.error}
-            helperText={fields.nombreUsuario.message}
-            sx={{ m: 1, width: "90%" }}
-            variant="outlined"
-            label={fields.nombreUsuario.label}
-            name={fields.nombreUsuario.name}
-            value={fields.nombreUsuario.value}
-            onChange={handleDataChange}
-            onKeyUp={validate}
-            onBlur={validate}
-            key={fields.nombreUsuario.name}
-            required
-            type={fields.nombreUsuario.type}
-          />
-          <Controls.Input
-            disabled={variant === "del" ? true : false}
-            error={fields.emailUsuario.error}
-            helperText={fields.emailUsuario.message}
-            sx={{ m: 1, width: "90%" }}
-            variant="outlined"
-            label={fields.emailUsuario.label}
-            name={fields.emailUsuario.name}
-            value={fields.emailUsuario.value}
-            onChange={handleDataChange}
-            onKeyUp={validate}
-            onBlur={validate}
-            key={fields.emailUsuario.name}
-            required
-            type={fields.emailUsuario.type}
-          />
         </Grid>
+        {generic}
+        {variant === "edit" && (
+          <Grid item md={6} xs={12} align="center">
+            <FormControlLabel
+              control={<Switch onChange={getValue} />}
+              label="Cambiar permisos y contraseña"
+            />
+          </Grid>
+        )}
+        {authFields}
         <Grid item md={6} xs={12} align="center">
-          <Controls.Input
-            disabled={variant === "del" ? true : false}
-            error={fields.username.error}
-            helperText={fields.username.message}
-            sx={{ m: 1, width: "90%" }}
-            variant="outlined"
-            label={fields.username.label}
-            name={fields.username.name}
-            value={fields.username.value}
-            onChange={handleDataChange}
-            onKeyUp={validate}
-            onBlur={validate}
-            key={fields.username.name}
-            required
-            type={fields.username.type}
-          />
-          <FormControlLabel
-            style={{ display: variant === "edit" ? "block" : "none" }}
-            control={<Switch onChange={getValue} />}
-            label="Cambiar contraseña"
-          />
-          <Controls.Input
+          <TextField
             disabled={
               variant === "del" ? true : variant === "add" ? false : swicth
             }
@@ -258,6 +385,16 @@ export const UsersForm = (props) => {
         >
           ACEPTAR
         </Button>
+        {variant === "add" && (
+          <Button
+            variant="contained"
+            color="secondary"
+            sx={{ mx: 3 }}
+            onClick={handleClean}
+          >
+            LIMPIAR
+          </Button>
+        )}
         <Button
           variant="contained"
           color="error"
