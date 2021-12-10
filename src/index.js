@@ -1,14 +1,16 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-import App from './App';
+import {TiendaGApp} from './TiendaGApp';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import reportWebVitals from './reportWebVitals';
+import {ThemeProvider } from '@mui/material/styles';
+import { theme } from "./assets/Theme";
 
 ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
+  <ThemeProvider theme={theme}>
+    <TiendaGApp />
+    </ThemeProvider>,
   document.getElementById('root')
 );
 
